@@ -1,0 +1,25 @@
+# Using mlxconfig
+https://docs.nvidia.com/networking/display/mftv422/using+mlxconfig#Usingmlxconfig-UsingmlxconfigtoSetIB/ETHParameters
+
+mlxconfig -d /dev/mst/mt41692_pciconf0 -e q | grep -i link_type
+
+mlxconfig -d /dev/mst/mt41692_pciconf0 set LINK_TYPE_P1=1 LINK_TYPE_P2=1
+
+
+设置IB
+# 重启指令
+echo "SW_RESET 1" > /dev/rshim0/misc
+
+
+dpaeumgmt
+
+查询可用EU 
+./dpaeumgmt eu_group query -d mlx5_0
+
+创建EU组
+ ./dpaeumgmt eu_group create -d mlx5_0 -n "test1" -r "6-8,16,32"
+
+删除EU租 -g 1 是组ID
+ ./dpaeumgmt eu_group destroy -d mlx5_0 -g 1
+
+ ./dpaeumgmt  partition create -d mlx5_0 -v 0,1 -r 1-100 -m 2 
