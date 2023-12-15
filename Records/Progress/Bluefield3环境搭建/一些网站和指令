@@ -5,6 +5,11 @@ mlxconfig -d /dev/mst/mt41692_pciconf0 -e q | grep -i link_type
 
 mlxconfig -d /dev/mst/mt41692_pciconf0 set LINK_TYPE_P1=1 LINK_TYPE_P2=1
 
+## 更新PCIe bus识别
+sudo update-pciids
+
+## DPU固件升级 //在DPU上执行
+sudo /opt/mellanox/mlnx-fw-updater/mlnx_fw_updater.pl --force-fw-update
 
 设置IB
 # 重启指令

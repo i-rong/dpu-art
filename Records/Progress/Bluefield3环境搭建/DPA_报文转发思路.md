@@ -41,3 +41,60 @@
 This function returns the remote memory key for a memory region that  as registered. To obtain an rkey, the memory region must have been provided remote access capabilities, otherwise,  an error is returned and rkey is set to zero
 
 doca_dpa_mem_rkey_get
+
+# 具体实现v1.0 
+在DPA中建立流表对流进行实现管理策略，流表可以通过rpc的方式进行修改。
+
+## 流表
+1.流表最常用的动作：forward,discard(drop),Next table\
+2.流表就是交换机里的一张转发表，类似交换机的MAC表和路由器的路由表。\
+3.每一个流表项都有各种动作\
+4.流表由一条条的流表项（路由条目）组成。\
+5.可以包含多个流表\
+6.流表由主机建立，通过RPC下发\
+流表项通过包含header fields,counters,actions。\
+
+Header Fields(包头域)的主要内容如下
+包头域主要是不再分层，简单的说，就是除了进接口，传统2层到4层的寻址信息都出现在包头域中（MAC，IP，PORT）\
+<img src="pics/header_fields.png" align = "center" width="600" /> 
+L2_reflecoter使用的匹配表如下,基本包含了上述包头里的域：
+```
+struct mlx5_ifc_dr_match_spec_bits {
+	uint8_t smac_47_16[0x20];
+	uint8_t smac_15_0[0x10];
+	uint8_t ethertype[0x10];
+	uint8_t dmac_47_16[0x20];
+	uint8_t dmac_15_0[0x10];
+	uint8_t first_prio[0x3];
+	uint8_t first_cfi[0x1];
+	uint8_t first_vid[0xc];
+	uint8_t ip_protocol[0x8];
+	uint8_t ip_dscp[0x6];
+	uint8_t ip_ecn[0x2];
+	uint8_t cvlan_tag[0x1];
+	uint8_t svlan_tag[0x1];
+	uint8_t frag[0x1];
+	uint8_t ip_version[0x4];
+	uint8_t tcp_flags[0x9];
+	uint8_t tcp_sport[0x10];
+	uint8_t tcp_dport[0x10];
+	uint8_t reserved_at_c0[0x18];
+	uint8_t ip_ttl_hoplimit[0x8];
+	uint8_t udp_sport[0x10];
+	uint8_t udp_dport[0x10];
+	uint8_t src_ip_127_96[0x20];
+	uint8_t src_ip_95_64[0x20];
+	uint8_t src_ip_63_32[0x20];
+	uint8_t src_ip_31_0[0x20];
+	uint8_t dst_ip_127_96[0x20];
+	uint8_t dst_ip_95_64[0x20];
+	uint8_t dst_ip_63_32[0x20];
+	uint8_t dst_ip_31_0[0x20];
+};
+```
+## 计数器Counters
+
+主要对每张表，每个端口，每个流等进行计数，方便流量监管（例如经过这个端口有多少流量？匹配这个流的数据包有多少了、这张表查找了多少次？）主要是将流量可视化
+
+## 动作Actions
+即是对匹配到的流进行处理，传统网络中要不转发要不丢弃，没有第三种选择，openflow1.0规定了必备动作（Require Action）和可选动作（Optional Actions）
